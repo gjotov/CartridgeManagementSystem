@@ -101,7 +101,7 @@
 В этом проекте в качестве базы данных может быть использована SQLite.
 
 ### Схема базы данных
-![](https://github.com/gjotov/WPF-CartridgeManagementSystem/blob/master/CartridgeDB.png)
+![](https://github.com/gjotov/CartridgeManagementSystem/blob/master/CartridgeDB.png)
 
 ### База данных состоит из следующих таблиц:
 
