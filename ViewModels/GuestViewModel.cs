@@ -1,12 +1,16 @@
-﻿using System.Collections.ObjectModel;
-using CartridgeManagementSystem.Models;
+﻿using CartridgeManagementSystem.Models;
+using System.Collections.ObjectModel;
 using System.Data.SQLite;
+using System.Linq;
 using System.Windows.Input;
 
 namespace CartridgeManagementSystem.ViewModels
 {
     public class GuestViewModel : BaseViewModel
     {
+        public ObservableCollection<Cartridge> Cartridges { get; set; }
+        public ObservableCollection<Cartridge> FilteredCartridges { get; set; }
+
         private string _searchQuery;
         public string SearchQuery
         {
@@ -15,18 +19,20 @@ namespace CartridgeManagementSystem.ViewModels
             {
                 _searchQuery = value;
                 OnPropertyChanged(nameof(SearchQuery));
+                SearchCartridges();
             }
         }
 
-        public ObservableCollection<Cartridge> Cartridges { get; set; }
-
-        public ICommand SearchCommand { get; }
+        public ICommand SearchCommand { get; set; }
 
         public GuestViewModel()
         {
             Cartridges = new ObservableCollection<Cartridge>();
-            SearchCommand = new RelayCommand(Search);
+            FilteredCartridges = new ObservableCollection<Cartridge>();
+
             LoadCartridges();
+
+            SearchCommand = new RelayCommand(SearchCartridges);
         }
 
         public void LoadCartridges()
@@ -41,7 +47,7 @@ namespace CartridgeManagementSystem.ViewModels
                     {
                         while (reader.Read())
                         {
-                            Cartridges.Add(new Cartridge
+                            var cartridge = new Cartridge
                             {
                                 Id = reader.GetInt32(0),
                                 Type = reader.GetString(1),
@@ -50,42 +56,22 @@ namespace CartridgeManagementSystem.ViewModels
                                 InstallationDate = reader.GetString(4),
                                 Status = reader.GetString(5),
                                 Comment = reader.GetString(6)
-                            });
+                            };
+                            Cartridges.Add(cartridge);
+                            FilteredCartridges.Add(cartridge);
                         }
                     }
                 }
             }
         }
 
-        private void Search(object parameter)
+        private void SearchCartridges(object parameter = null)
         {
-            using (SQLiteConnection conn = new SQLiteConnection("Data Source=cartridge_management.db"))
+            FilteredCartridges.Clear();
+            foreach (var cartridge in Cartridges.Where(c => c.Type.Contains(SearchQuery) || c.Model.Contains(SearchQuery) || c.SerialNumber.Contains(SearchQuery)))
             {
-                conn.Open();
-                string query = "SELECT * FROM Cartridges WHERE Model LIKE @searchQuery";
-                using (SQLiteCommand cmd = new SQLiteCommand(query, conn))
-                {
-                    cmd.Parameters.AddWithValue("@searchQuery", $"%{SearchQuery}%");
-                    using (SQLiteDataReader reader = cmd.ExecuteReader())
-                    {
-                        Cartridges.Clear();
-                        while (reader.Read())
-                        {
-                            Cartridges.Add(new Cartridge
-                            {
-                                Id = reader.GetInt32(0),
-                                Type = reader.GetString(1),
-                                Model = reader.GetString(2),
-                                SerialNumber = reader.GetString(3),
-                                InstallationDate = reader.GetString(4),
-                                Status = reader.GetString(5),
-                                Comment = reader.GetString(6)
-                            });
-                        }
-                    }
-                }
+                FilteredCartridges.Add(cartridge);
             }
         }
     }
 }
-

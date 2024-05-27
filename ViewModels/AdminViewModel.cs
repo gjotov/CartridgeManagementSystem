@@ -1,32 +1,43 @@
 ﻿using System.Collections.ObjectModel;
 using System.Windows.Input;
 using CartridgeManagementSystem.Models;
+using CartridgeManagementSystem.Views;
 using System.Data.SQLite;
+
 
 namespace CartridgeManagementSystem.ViewModels
 {
     public class AdminViewModel : BaseViewModel
     {
-        private ObservableCollection<Cartridge> _cartridges;
-        public ObservableCollection<Cartridge> Cartridges
+        public ObservableCollection<Cartridge> Cartridges { get; set; }
+        public ObservableCollection<User> Users { get; set; }
+
+        private User _selectedUser;
+        public User SelectedUser
         {
-            get { return _cartridges; }
+            get { return _selectedUser; }
             set
             {
-                _cartridges = value;
-                OnPropertyChanged(nameof(Cartridges));
+                _selectedUser = value;
+                OnPropertyChanged(nameof(SelectedUser));
             }
         }
 
-        public ICommand AddCartridgeCommand { get; }
-        public ICommand DeleteCartridgeCommand { get; }
+        public ICommand AddUserCommand { get; set; }
+        public ICommand DeleteUserCommand { get; set; }
+        public ICommand ChangeUserRoleCommand { get; set; }
 
         public AdminViewModel()
         {
             Cartridges = new ObservableCollection<Cartridge>();
+            Users = new ObservableCollection<User>();
+
             LoadCartridges();
-            AddCartridgeCommand = new RelayCommand(AddCartridge);
-            DeleteCartridgeCommand = new RelayCommand(DeleteCartridge, CanDeleteCartridge);
+            LoadUsers();
+
+            AddUserCommand = new RelayCommand(AddUser);
+            DeleteUserCommand = new RelayCommand(DeleteUser);
+            ChangeUserRoleCommand = new RelayCommand(ChangeUserRole);
         }
 
         public void LoadCartridges()
@@ -57,58 +68,85 @@ namespace CartridgeManagementSystem.ViewModels
             }
         }
 
-        private void AddCartridge(object parameter)
+        private void LoadUsers()
         {
-            var newCartridge = new Cartridge
-            {
-                Type = "Новый тип",
-                Model = "Новая модель",
-                SerialNumber = "12345",
-                InstallationDate = "2024-01-01",
-                Status = "На складе",
-                Comment = "Комментарий"
-            };
-
             using (SQLiteConnection conn = new SQLiteConnection("Data Source=cartridge_management.db"))
             {
                 conn.Open();
-                string query = "INSERT INTO Cartridges (Type, Model, SerialNumber, InstallationDate, Status, Comment) VALUES (@Type, @Model, @SerialNumber, @InstallationDate, @Status, @Comment)";
+                string query = "SELECT * FROM Users";
                 using (SQLiteCommand cmd = new SQLiteCommand(query, conn))
                 {
-                    cmd.Parameters.AddWithValue("@Type", newCartridge.Type);
-                    cmd.Parameters.AddWithValue("@Model", newCartridge.Model);
-                    cmd.Parameters.AddWithValue("@SerialNumber", newCartridge.SerialNumber);
-                    cmd.Parameters.AddWithValue("@InstallationDate", newCartridge.InstallationDate);
-                    cmd.Parameters.AddWithValue("@Status", newCartridge.Status);
-                    cmd.Parameters.AddWithValue("@Comment", newCartridge.Comment);
-
-                    cmd.ExecuteNonQuery();
+                    using (SQLiteDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            Users.Add(new User
+                            {
+                                Id = reader.GetInt32(0),
+                                Username = reader.GetString(1),
+                                Password = reader.GetString(2),
+                                Role = reader.GetString(3)
+                            });
+                        }
+                    }
                 }
             }
-
-            Cartridges.Add(newCartridge);
         }
 
-        private bool CanDeleteCartridge(object parameter)
+        private void AddUser(object parameter)
         {
-            return parameter != null;
-        }
-
-        private void DeleteCartridge(object parameter)
-        {
-            if (parameter is Cartridge cartridge)
+            var addUserWindow = new AddUserWindow();
+            if (addUserWindow.ShowDialog() == true)
             {
                 using (SQLiteConnection conn = new SQLiteConnection("Data Source=cartridge_management.db"))
                 {
                     conn.Open();
-                    string query = "DELETE FROM Cartridges WHERE Id = @id";
+                    string query = "INSERT INTO Users (Username, Password, Role) VALUES (@username, @password, @role)";
                     using (SQLiteCommand cmd = new SQLiteCommand(query, conn))
                     {
-                        cmd.Parameters.AddWithValue("@id", cartridge.Id);
+                        cmd.Parameters.AddWithValue("@username", addUserWindow.UsernameTextBox);
+                        cmd.Parameters.AddWithValue("@password", addUserWindow.PasswordTextBox);
+                        cmd.Parameters.AddWithValue("@role", addUserWindow.RoleComboBox);
                         cmd.ExecuteNonQuery();
                     }
                 }
-                Cartridges.Remove(cartridge);
+                LoadUsers();
+            }
+        }
+
+        private void DeleteUser(object parameter)
+        {
+            if (SelectedUser != null)
+            {
+                using (SQLiteConnection conn = new SQLiteConnection("Data Source=cartridge_management.db"))
+                {
+                    conn.Open();
+                    string query = "DELETE FROM Users WHERE Id=@id";
+                    using (SQLiteCommand cmd = new SQLiteCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@id", SelectedUser.Id);
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+                Users.Remove(SelectedUser);
+            }
+        }
+
+        private void ChangeUserRole(object parameter)
+        {
+            if (SelectedUser != null)
+            {
+                using (SQLiteConnection conn = new SQLiteConnection("Data Source=cartridge_management.db"))
+                {
+                    conn.Open();
+                    string query = "UPDATE Users SET Role=@role WHERE Id=@id";
+                    using (SQLiteCommand cmd = new SQLiteCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@role", SelectedUser.Role);
+                        cmd.Parameters.AddWithValue("@id", SelectedUser.Id);
+                        cmd.ExecuteNonQuery();
+                    }
+                }
             }
         }
     }

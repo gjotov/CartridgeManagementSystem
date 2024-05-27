@@ -64,7 +64,7 @@ namespace CartridgeManagementSystem.ViewModels
             GuestLoginCommand = new RelayCommand(LoginAsGuest);
         }
 
-        private void LoadCartridges()
+        public void LoadCartridges()
         {
             using (SQLiteConnection conn = new SQLiteConnection("Data Source=cartridge_management.db"))
             {

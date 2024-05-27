@@ -25,6 +25,21 @@
                     </StackPanel>
                 </Grid>
             </TabItem>
+            <TabItem Header="Управление пользователями">
+                <Grid>
+                    <StackPanel Orientation="Vertical">
+                        <DataGrid x:Name="UsersDataGrid" ItemsSource="{Binding Users}" AutoGenerateColumns="False" Height="200" SelectedItem="{Binding SelectedUser}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Имя пользователя" Binding="{Binding Username}" />
+                                <DataGridTextColumn Header="Роль" Binding="{Binding Role}" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <Button Content="Добавить пользователя" Command="{Binding AddUserCommand}" />
+                        <Button Content="Удалить пользователя" Command="{Binding DeleteUserCommand}" CommandParameter="{Binding SelectedItem, ElementName=UsersDataGrid}" />
+                        <Button Content="Изменить роль" Command="{Binding ChangeUserRoleCommand}" />
+                    </StackPanel>
+                </Grid>
+            </TabItem>
         </TabControl>
     </Grid>
 </Window>
