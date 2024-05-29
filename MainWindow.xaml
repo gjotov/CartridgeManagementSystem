@@ -10,7 +10,7 @@
         <Label Content="Имя пользователя" HorizontalAlignment="Center" Margin="10,10,0,0" VerticalAlignment="Top"/>
         <TextBox Text="{Binding Username}" HorizontalAlignment="Center" Margin="10,30,0,0" VerticalAlignment="Top" Width="260"/>
         <Label Content="Пароль" HorizontalAlignment="Center" Margin="10,60,0,0" VerticalAlignment="Top"/>
-        <TextBox Text="{Binding Password}" HorizontalAlignment="Center" Margin="10,80,0,0" VerticalAlignment="Top" Width="260"/>
+        <PasswordBox PasswordChanged="PasswordBox_PasswordChanged" HorizontalAlignment="Center" Margin="10,80,0,0" VerticalAlignment="Top" Width="260"/>
         <Button Content="Войти" Command="{Binding LoginCommand}" HorizontalAlignment="Center" Margin="10,110,0,0" VerticalAlignment="Top" Width="260"/>
         <Button Content="Войти как гость" Command="{Binding GuestLoginCommand}"  HorizontalAlignment="Center" VerticalAlignment="Top" Margin="10,135,0,0" Width="260"/>
     </Grid>
