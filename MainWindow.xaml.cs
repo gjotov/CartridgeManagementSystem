@@ -24,5 +24,12 @@ namespace CartridgeManagementSystem
         {
             InitializeComponent();
         }
+        private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
+        {
+        if (DataContext is MainViewModel viewModel)
+        {
+          viewModel.Password = ((PasswordBox)sender).Password;
+        }
+        }
     }
 }
